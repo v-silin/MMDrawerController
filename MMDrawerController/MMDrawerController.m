@@ -418,13 +418,9 @@ static NSString *MMDrawerOpenSideKey = @"MMDrawerOpenSide";
     UIViewController * oldCenterViewController = self.centerViewController;
     if(oldCenterViewController){
         [oldCenterViewController willMoveToParentViewController:nil];
-        if(animated == NO){
-            [oldCenterViewController beginAppearanceTransition:NO animated:NO];
-        }
+        [oldCenterViewController beginAppearanceTransition:NO animated:animated];
         [oldCenterViewController.view removeFromSuperview];
-        if(animated == NO){
-            [oldCenterViewController endAppearanceTransition];
-        }
+        [oldCenterViewController endAppearanceTransition];
         [oldCenterViewController removeFromParentViewController];
     }
     
@@ -437,14 +433,12 @@ static NSString *MMDrawerOpenSideKey = @"MMDrawerOpenSide";
     [self.centerViewController.view setAutoresizingMask:UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight];
     [self updateShadowForCenterView];
     
-    if(animated == NO){
-        // If drawer is offscreen, then viewWillAppear: will take care of this
-        if(self.view.window) {
-            [self.centerViewController beginAppearanceTransition:YES animated:NO];
-            [self.centerViewController endAppearanceTransition];
-        }
-        [self.centerViewController didMoveToParentViewController:self];
+    // If drawer is offscreen, then viewWillAppear: will take care of this
+    if(self.view.window) {
+        [self.centerViewController beginAppearanceTransition:YES animated:animated];
+        [self.centerViewController endAppearanceTransition];
     }
+    [self.centerViewController didMoveToParentViewController:self];
 }
 
 -(void)setCenterViewController:(UIViewController *)newCenterViewController withCloseAnimation:(BOOL)animated completion:(void(^)(BOOL finished))completion{
@@ -455,21 +449,7 @@ static NSString *MMDrawerOpenSideKey = @"MMDrawerOpenSide";
     }
   
     BOOL forwardAppearanceMethodsToCenterViewController = ([self.centerViewController isEqual:newCenterViewController] == NO);
-
-    UIViewController * oldCenterViewController = self.centerViewController;
-    // This is related to issue 363 (https://github.com/novkostya/MMDrawerController/pull/363)
-    // This needs to be refactored so the appearance logic is easier
-    // to follow across the multiple close/setter methods
-    if (animated && forwardAppearanceMethodsToCenterViewController) {
-        [oldCenterViewController beginAppearanceTransition:NO animated:NO];
-    }
-    
     [self setCenterViewController:newCenterViewController animated:animated];
-    
-    // Related to note above.
-    if (animated && forwardAppearanceMethodsToCenterViewController) {
-        [oldCenterViewController endAppearanceTransition];
-    }
     
     if(animated){
         [self updateDrawerVisualStateForDrawerSide:self.openSide percentVisible:1.0];
@@ -636,7 +616,7 @@ static NSString *MMDrawerOpenSideKey = @"MMDrawerOpenSide";
 #pragma mark - Bounce Methods
 -(void)bouncePreviewForDrawerSide:(MMDrawerSide)drawerSide completion:(void(^)(BOOL finished))completion{
     NSParameterAssert(drawerSide!=MMDrawerSideNone);
-    [self bouncePreviewForDrawerSide:drawerSide distance:MMDrawerDefaultBounceDistance completion:completion];
+    [self bouncePreviewForDrawerSide:drawerSide distance:MMDrawerDefaultBounceDistance completion:nil];
 }
 
 -(void)bouncePreviewForDrawerSide:(MMDrawerSide)drawerSide distance:(CGFloat)distance completion:(void(^)(BOOL finished))completion{
@@ -1273,6 +1253,8 @@ static inline CGFloat originXForDrawerOriginAndTargetOriginOffset(CGFloat origin
     UIPanGestureRecognizer * pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panGestureCallback:)];
     [pan setDelegate:self];
     [self.view addGestureRecognizer:pan];
+    
+    _panGestureRecognizer = pan;
     
     UITapGestureRecognizer * tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapGestureCallback:)];
     [tap setDelegate:self];

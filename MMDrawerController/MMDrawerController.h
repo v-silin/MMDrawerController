@@ -97,6 +97,12 @@ typedef void (^MMDrawerControllerDrawerVisualStateBlock)(MMDrawerController * dr
 
 @interface MMDrawerController : UIViewController
 
+#pragma -mark Customization
+
+@property (nonatomic, strong, readonly) UIPanGestureRecognizer *panGestureRecognizer;
+
+#pragma -mark END Customization
+
 ///---------------------------------------
 /// @name Accessing Drawer Container View Controller Properties
 ///---------------------------------------
